@@ -1,0 +1,12 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign in – Cinevo</title><link rel="stylesheet" href="/style.css"></head><body class="auth-page">
+<nav class="nav"><a class="logo" href="/">CINEVO</a></nav>
+<main class="auth-box"><h1>Sign in</h1>
+<div class="err" id="err" role="alert"></div>
+<form id="f" novalidate>
+<label>Email<input id="email" type="email" autocomplete="email" required></label>
+<label>Password<input id="password" type="password" autocomplete="current-password" required></label>
+<button class="btn">Sign in</button></form>
+<p class="alt">New to Cinevo? <a href="/signup.html">Sign up now</a></p></main>
+<script src="/app.js"></script>
+<script>authForm("f","/api/login",["email","password"]);</script></body></html>

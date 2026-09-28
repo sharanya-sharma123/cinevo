@@ -1,0 +1,25 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cinevo – Watch anywhere</title><link rel="stylesheet" href="/style.css"></head><body>
+<header class="hero">
+  <nav class="nav"><a class="logo" href="/">CINEVO</a><a class="btn" href="/login.html">Sign in</a></nav>
+  <div class="hero-body">
+    <h1>Unlimited movies, shows, and more</h1>
+    <p>Starts at ₹149. Cancel anytime.</p>
+    <p>Ready to watch? Enter your email to create your account.</p>
+    <form class="cta" id="start"><input type="email" id="email" placeholder="Email address" aria-label="Email address" required><button class="btn">Get Started</button></form>
+  </div>
+</header>
+<section class="feature"><div><h2>Enjoy on your TV</h2><p>Watch on smart TVs, consoles, streaming sticks, and more.</p></div><div class="art"></div></section>
+<section class="feature rev"><div><h2>Download your shows to watch offline</h2><p>Save your favourites and always have something to watch.</p></div><div class="art"></div></section>
+<section class="feature"><div><h2>Keep your own list</h2><p>Save titles you want to watch and track what you've finished.</p></div><div class="art"></div></section>
+<section class="faq"><h2>Frequently Asked Questions</h2>
+  <details><summary>What is Cinevo?</summary><p>A streaming service with a wide variety of award-winning shows, movies, and documentaries.</p></details>
+  <details><summary>How much does it cost?</summary><p>Plans start at ₹149 a month. No extra costs, no contracts.</p></details>
+  <details><summary>Where can I watch?</summary><p>Anywhere, on your phone, tablet, laptop, or TV.</p></details>
+  <details><summary>How do I cancel?</summary><p>Anytime, online, in two clicks. No cancellation fees.</p></details>
+</section>
+<footer>Student project. Not affiliated with any streaming service.</footer>
+<script>
+document.getElementById("start").addEventListener("submit",e=>{e.preventDefault();
+location.href="/signup.html?email="+encodeURIComponent(document.getElementById("email").value)});
+</script></body></html>

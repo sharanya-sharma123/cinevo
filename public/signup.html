@@ -1,0 +1,16 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign up – Cinevo</title><link rel="stylesheet" href="/style.css"></head><body class="auth-page">
+<nav class="nav"><a class="logo" href="/">CINEVO</a><a class="btn ghost" href="/login.html">Sign in</a></nav>
+<main class="auth-box"><h1>Create your account</h1>
+<div class="err" id="err" role="alert"></div>
+<form id="f" novalidate>
+<label>Name<input id="name" autocomplete="name" required></label>
+<label>Email<input id="email" type="email" autocomplete="email" required></label>
+<label>Password (8+ characters)<input id="password" type="password" autocomplete="new-password" minlength="8" required></label>
+<button class="btn">Sign up</button></form>
+<p class="alt">Already have an account? <a href="/login.html">Sign in</a></p></main>
+<script src="/app.js"></script>
+<script>
+document.getElementById("email").value=new URLSearchParams(location.search).get("email")||"";
+authForm("f","/api/signup",["name","email","password"]);
+</script></body></html>
