@@ -10,5 +10,8 @@ Stack: Node/Express, PostgreSQL (Neon), bcrypt (hashed passwords), JWT in httpOn
 ## API
 POST /api/signup, /api/login, /api/logout · GET /api/me · GET/POST /api/list · PUT/DELETE /api/list/:id · GET /api/health
 
-Live URL: <add here>
+**Live URL:** https://cinevo-t8yb.onrender.com
+
+**GitHub:** https://github.com/sharanya-sharma123/cinevo
+
 Educational project; not affiliated with any streaming service.
