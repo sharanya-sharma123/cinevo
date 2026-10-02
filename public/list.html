@@ -1,13 +1,17 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>My List – Cinevo</title><link rel="stylesheet" href="/style.css"></head><body>
+<title>My List – Cinevo</title><link rel="stylesheet" href="/style.css"></head><body class="cine">
+<span class="float f1" aria-hidden="true">🍿</span><span class="float f2" aria-hidden="true">🎬</span>
 <nav class="nav"><a class="logo" href="/">CINEVO</a><div><span id="who"></span> <button class="btn ghost" id="out">Sign out</button></div></nav>
 <main class="dash">
-<div class="head"><h1>My List</h1><button class="btn" id="open">+ Add title</button></div>
+<div class="head"><div><h1>My List</h1><p class="sub" id="count"></p></div><button class="btn" id="open">+ Add title</button></div>
 <div class="err" id="err" role="alert"></div>
 <form class="add" id="add" hidden>
-<label>Title<input id="title" maxlength="120" required></label>
+<label class="tl">Title<input id="title" maxlength="120" required autocomplete="off"><ul class="sugg" id="sugg" hidden></ul></label>
 <label>Genre<select id="genre"><option value="">Select genre</option><option>Action</option><option>Adventure</option><option>Animation</option><option>Biography</option><option>Comedy</option><option>Crime</option><option>Documentary</option><option>Drama</option><option>Family</option><option>Fantasy</option><option>Horror</option><option>Musical</option><option>Mystery</option><option>Reality</option><option>Romance</option><option>Sci-Fi</option><option>Sports</option><option>Thriller</option><option>War</option><option>Western</option></select></label>
 <label>Status<select id="status"><option value="want">Want to watch</option><option value="watching">Watching</option><option value="watched">Watched</option></select></label>
+<label>Year<input id="year" type="number" min="1888" max="2100" placeholder="e.g. 2018"></label>
+<label>Rating<select id="rating"><option value="">No rating</option><option value="1">★☆☆☆☆</option><option value="2">★★☆☆☆</option><option value="3">★★★☆☆</option><option value="4">★★★★☆</option><option value="5">★★★★★</option></select></label>
+<label class="nt">Note<input id="note" maxlength="300" placeholder="Why you want to watch it, or what you thought"></label>
 <button class="btn" id="save">Add</button><button type="button" class="btn ghost" id="cancel">Cancel</button></form>
 <div id="items"><p class="hint">Loading your list…</p></div></main>
 <script src="/app.js"></script>
@@ -23,10 +27,16 @@ function panel(open,item){
   const g=item?item.genre:"";
   if(g&&![...$("genre").options].some(o=>o.value===g)){const o=document.createElement("option");o.textContent=g;$("genre").add(o)}
   $("genre").value=g;$("status").value=item?item.status:"want";
+  $("year").value=item&&item.year?item.year:"";$("rating").value=item&&item.rating?item.rating:"";$("note").value=item?item.note||"":"";
   if(open)$("title").focus();
 }
+const stars=n=>n?"★".repeat(n)+"☆".repeat(5-n):"";
+const hue=t=>{let h=0;for(const c of t)h=(h*31+c.charCodeAt(0))%360;return h};
 function render(){
-  $("items").innerHTML=items.length?items.map(i=>`<div class="item"><div class="t">${esc(i.title)}<br><small>${esc(i.genre||"No genre")}</small></div>
+  const w=items.filter(i=>i.status==="watching").length,d=items.filter(i=>i.status==="watched").length;
+  $("count").textContent=items.length?`${items.length} title${items.length>1?"s":""} · ${w} watching · ${d} watched`:"";
+  $("items").innerHTML=items.length?items.map(i=>`<div class="item"><div class="poster" style="--h:${hue(i.title)}">${esc((i.title.trim()[0]||"?").toUpperCase())}</div>
+  <div class="t">${esc(i.title)}<br><small>${[i.year,i.genre,stars(i.rating)].filter(Boolean).map(esc).join(" · ")||"No details yet"}</small>${i.note?`<p class="note">${esc(i.note)}</p>`:""}</div>
   <span class="pill">${L[i.status]}</span><button data-e="${i.id}">Edit</button><button class="del" data-d="${i.id}">Delete</button></div>`).join("")
   :'<p class="empty">Nothing here yet. Click “+ Add title” to save your first one.</p>';
 }
@@ -52,12 +62,22 @@ async function init(){
 $("open").onclick=()=>panel(true);
 $("cancel").onclick=()=>{show("");panel(false)};
 $("add").addEventListener("submit",async e=>{e.preventDefault();show("");
-  const b={title:$("title").value,genre:$("genre").value,status:$("status").value};
+  const b={title:$("title").value,genre:$("genre").value,status:$("status").value,year:$("year").value,rating:$("rating").value,note:$("note").value};
   try{editId?await api("/api/list/"+editId,"PUT",b):await api("/api/list","POST",b);panel(false);load()}catch(x){show(x.message)}});
 $("items").addEventListener("click",async e=>{
   const d=e.target.dataset.d,ed=e.target.dataset.e;
   if(d){try{await api("/api/list/"+d,"DELETE");load()}catch(x){show(x.message)}}
   if(ed){panel(true,items.find(x=>x.id==ed));window.scrollTo({top:0,behavior:"smooth"})}});
 $("out").onclick=async()=>{await api("/api/logout","POST");location.href="/"};
+let st;const sg=$("sugg");
+$("title").addEventListener("input",()=>{clearTimeout(st);const q=$("title").value.trim();
+  if(q.length<2){sg.hidden=true;return}
+  st=setTimeout(async()=>{try{const {results}=await api("/api/search?q="+encodeURIComponent(q));
+    if($("title").value.trim()!==q)return;
+    sg.innerHTML=results.map((r,i)=>`<li data-i="${i}">${r.poster?`<img src="${r.poster}" alt="">`:'<span class="ph"></span>'}<span>${esc(r.title)}<small>${esc(r.type)}${r.year?" · "+r.year:""}</small></span></li>`).join("");
+    sg._r=results;sg.hidden=!results.length}catch{sg.hidden=true}},300)});
+sg.addEventListener("mousedown",e=>{const li=e.target.closest("li");if(!li)return;e.preventDefault();
+  const r=sg._r[li.dataset.i];$("title").value=r.title;if(r.genre)$("genre").value=r.genre;sg.hidden=true});
+$("title").addEventListener("blur",()=>{sg.hidden=true});
 init();
 </script></body></html>

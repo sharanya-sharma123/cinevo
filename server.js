@@ -75,12 +75,35 @@ app.get("/api/me", auth, async (req, res) => {
   r.rows[0] ? res.json({ user: r.rows[0] }) : res.status(401).json({ error: "Please log in." });
 });
 
+// Title autocomplete via TMDB (needs TMDB_API_KEY; returns [] if not set)
+const GENRE_MAP = {28:"Action",12:"Adventure",16:"Animation",35:"Comedy",80:"Crime",99:"Documentary",18:"Drama",10751:"Family",14:"Fantasy",27:"Horror",10402:"Musical",9648:"Mystery",10749:"Romance",878:"Sci-Fi",53:"Thriller",10752:"War",37:"Western",10759:"Action",10765:"Sci-Fi",10764:"Reality",10768:"War"};
+app.get("/api/search", auth, async (req, res) => {
+  const q = String(req.query.q || "").trim().slice(0, 80);
+  if (q.length < 2 || !process.env.TMDB_API_KEY) return res.json({ results: [] });
+  try {
+    const r = await fetch("https://api.themoviedb.org/3/search/multi?include_adult=false&query=" + encodeURIComponent(q) +
+      "&api_key=" + encodeURIComponent(process.env.TMDB_API_KEY));
+    if (!r.ok) return res.json({ results: [] });
+    const d = await r.json();
+    const results = (d.results || []).filter((x) => x.media_type === "movie" || x.media_type === "tv").slice(0, 8).map((x) => ({
+      title: x.title || x.name,
+      year: (x.release_date || x.first_air_date || "").slice(0, 4),
+      type: x.media_type === "tv" ? "Series" : "Movie",
+      genre: (x.genre_ids || []).map((g) => GENRE_MAP[g]).find(Boolean) || "",
+      poster: x.poster_path ? "https://image.tmdb.org/t/p/w92" + x.poster_path : "",
+    }));
+    res.json({ results });
+  } catch (e) { res.json({ results: [] }); }
+});
+
 // My List CRUD (scoped to the logged-in user)
 const validItem = (b) => b && typeof b.title === "string" && b.title.trim().length > 0 && b.title.length <= 120;
 const STATUS = ["want", "watching", "watched"];
+const num = (v, lo, hi) => { const n = parseInt(v, 10); return Number.isInteger(n) && n >= lo && n <= hi ? n : null; };
+const ex = (b) => [num(b.year, 1888, 2100), num(b.rating, 1, 5), String(b.note || "").slice(0, 300)];
 
 app.get("/api/list", auth, async (req, res) => {
-  const r = await pool.query("SELECT id,title,genre,status FROM list_items WHERE user_id=$1 ORDER BY id DESC", [req.user.id]);
+  const r = await pool.query("SELECT id,title,genre,status,year,rating,note FROM list_items WHERE user_id=$1 ORDER BY id DESC", [req.user.id]);
   res.json({ items: r.rows });
 });
 app.post("/api/list", auth, async (req, res) => {
@@ -88,8 +111,8 @@ app.post("/api/list", auth, async (req, res) => {
   const { title, genre = "", status = "want" } = req.body;
   if (!STATUS.includes(status)) return res.status(400).json({ error: "Invalid status." });
   const r = await pool.query(
-    "INSERT INTO list_items(user_id,title,genre,status) VALUES($1,$2,$3,$4) RETURNING id,title,genre,status",
-    [req.user.id, title.trim(), String(genre).slice(0, 40), status]);
+    "INSERT INTO list_items(user_id,title,genre,status,year,rating,note) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING id,title,genre,status,year,rating,note",
+    [req.user.id, title.trim(), String(genre).slice(0, 40), status, ...ex(req.body)]);
   res.status(201).json({ item: r.rows[0] });
 });
 app.put("/api/list/:id", auth, async (req, res) => {
@@ -97,8 +120,8 @@ app.put("/api/list/:id", auth, async (req, res) => {
   const { title, genre = "", status = "want" } = req.body;
   if (!STATUS.includes(status)) return res.status(400).json({ error: "Invalid status." });
   const r = await pool.query(
-    "UPDATE list_items SET title=$1,genre=$2,status=$3 WHERE id=$4 AND user_id=$5 RETURNING id,title,genre,status",
-    [title.trim(), String(genre).slice(0, 40), status, req.params.id, req.user.id]);
+    "UPDATE list_items SET title=$1,genre=$2,status=$3,year=$4,rating=$5,note=$6 WHERE id=$7 AND user_id=$8 RETURNING id,title,genre,status,year,rating,note",
+    [title.trim(), String(genre).slice(0, 40), status, ...ex(req.body), req.params.id, req.user.id]);
   r.rows[0] ? res.json({ item: r.rows[0] }) : res.status(404).json({ error: "Not found." });
 });
 app.delete("/api/list/:id", auth, async (req, res) => {
@@ -113,7 +136,10 @@ app.delete("/api/list/:id", auth, async (req, res) => {
       password_hash TEXT NOT NULL, created_at TIMESTAMPTZ DEFAULT now());
     CREATE TABLE IF NOT EXISTS list_items(
       id SERIAL PRIMARY KEY, user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      title TEXT NOT NULL, genre TEXT DEFAULT '', status TEXT DEFAULT 'want');`);
+      title TEXT NOT NULL, genre TEXT DEFAULT '', status TEXT DEFAULT 'want');
+    ALTER TABLE list_items ADD COLUMN IF NOT EXISTS year INT;
+    ALTER TABLE list_items ADD COLUMN IF NOT EXISTS rating INT;
+    ALTER TABLE list_items ADD COLUMN IF NOT EXISTS note TEXT DEFAULT '';`);
   const port = process.env.PORT || 3000;
   app.listen(port, () => console.log("Running on " + port));
 })().catch((e) => { console.error(e); process.exit(1); });

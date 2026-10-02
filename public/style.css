@@ -75,5 +75,15 @@ input,select{width:100%;margin-top:.3rem;padding:.85rem;border-radius:4px;border
 @media(max-width:700px){.float{font-size:1.8rem;opacity:.5}.f3,.f4{display:none}}
 @media(prefers-reduced-motion:reduce){.float{animation:none}}
 
-.strip{display:none}
-.hero{padding:0}
+.cine{background:radial-gradient(circle at 50% -10%,#3a0509,#141414 60%) fixed}
+.cine::before{content:"";position:fixed;top:0;left:50%;width:90%;height:75vh;transform:translateX(-50%);clip-path:polygon(44% 0,56% 0,100% 100%,0 100%);background:linear-gradient(rgba(255,255,255,.09),transparent);pointer-events:none}
+.cine .nav,.cine .dash{position:relative;z-index:1}
+.cine .float{position:fixed;opacity:.35}
+.cine .f1{left:3%;top:72%}.cine .f2{right:3%;bottom:6%}
+.sub{color:var(--mute);margin:.2rem 0 0}
+.add{grid-template-columns:repeat(4,1fr)}
+.add .tl,.add .nt{grid-column:span 2}
+.poster{width:44px;height:62px;border-radius:4px;flex:none;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.4rem;background:linear-gradient(160deg,hsl(var(--h),70%,38%),hsl(var(--h),70%,15%));box-shadow:0 4px 10px rgba(0,0,0,.5)}
+.note{margin:.3rem 0 0;color:var(--mute);font-size:.9rem;font-weight:400}
+@media(max-width:1000px){.cine .float{display:none}}
+@media(max-width:700px){.add{grid-template-columns:1fr}.add .tl,.add .nt{grid-column:auto}}
