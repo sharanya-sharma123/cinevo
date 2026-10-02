@@ -74,3 +74,6 @@ input,select{width:100%;margin-top:.3rem;padding:.85rem;border-radius:4px;border
 .art{display:flex;align-items:center;justify-content:center;font-size:5.5rem}
 @media(max-width:700px){.float{font-size:1.8rem;opacity:.5}.f3,.f4{display:none}}
 @media(prefers-reduced-motion:reduce){.float{animation:none}}
+
+.strip{display:none}
+.hero{padding:0}
