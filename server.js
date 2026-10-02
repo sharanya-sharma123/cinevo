@@ -19,6 +19,7 @@ const pool = new Pool({
 
 app.use(express.json());
 app.use(cookieParser());
+app.use("/api", (req, res, next) => { res.set("Cache-Control", "no-store"); next(); });
 app.use(express.static(path.join(__dirname, "public")));
 
 const emailOk = (e) => typeof e === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);

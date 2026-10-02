@@ -1,35 +1,60 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>My List – Cinevo</title><link rel="stylesheet" href="/style.css"></head><body>
 <nav class="nav"><a class="logo" href="/">CINEVO</a><div><span id="who"></span> <button class="btn ghost" id="out">Sign out</button></div></nav>
-<main class="dash"><h1>My List</h1>
+<main class="dash">
+<div class="head"><h1>My List</h1><button class="btn" id="open">+ Add title</button></div>
 <div class="err" id="err" role="alert"></div>
-<form class="add" id="add">
+<form class="add" id="add" hidden>
 <label>Title<input id="title" maxlength="120" required></label>
 <label>Genre<input id="genre" maxlength="40"></label>
 <label>Status<select id="status"><option value="want">Want to watch</option><option value="watching">Watching</option><option value="watched">Watched</option></select></label>
-<button class="btn" id="save">Add</button></form>
-<div id="items"></div></main>
+<button class="btn" id="save">Add</button><button type="button" class="btn ghost" id="cancel">Cancel</button></form>
+<div id="items"><p class="hint">Loading your list…</p></div></main>
 <script src="/app.js"></script>
 <script>
 const L={want:"Want to watch",watching:"Watching",watched:"Watched"};
 const $=id=>document.getElementById(id);let editId=null,items=[];
 const show=m=>{$("err").textContent=m;$("err").classList.toggle("show",!!m)};
-const esc=s=>s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function panel(open,item){
+  $("add").hidden=!open;$("open").hidden=open;editId=item?item.id:null;
+  $("save").textContent=item?"Save changes":"Add";
+  $("title").value=item?item.title:"";$("genre").value=item?item.genre:"";$("status").value=item?item.status:"want";
+  if(open)$("title").focus();
+}
 function render(){
   $("items").innerHTML=items.length?items.map(i=>`<div class="item"><div class="t">${esc(i.title)}<br><small>${esc(i.genre||"No genre")}</small></div>
   <span class="pill">${L[i.status]}</span><button data-e="${i.id}">Edit</button><button class="del" data-d="${i.id}">Delete</button></div>`).join("")
-  :'<p class="empty">Your list is empty. Add a title above.</p>';
+  :'<p class="empty">Nothing here yet. Click “+ Add title” to save your first one.</p>';
 }
-async function load(){try{items=(await api("/api/list")).items;render()}catch(e){if(e.status===401)location.href="/login.html";else show(e.message)}}
-async function init(){try{const {user}=await api("/api/me");$("who").textContent=user.name+" ";load()}catch{location.href="/login.html"}}
+async function load(tries=3){
+  for(let n=1;n<=tries;n++){
+    try{items=(await api("/api/list")).items;show("");render();return}
+    catch(e){
+      if(e.status===401){location.href="/login.html";return}
+      if(n===tries){$("items").innerHTML='<p class="hint">Could not load your list. <button class="btn ghost" onclick="load()">Retry</button></p>';show(e.message)}
+      else await new Promise(r=>setTimeout(r,2000));
+    }
+  }
+}
+async function init(){
+  const u=await getUser();
+  if(!u){ // only treat a real 401 as logged out; retry once in case the server is waking up
+    await new Promise(r=>setTimeout(r,2500));
+    const u2=await getUser(); if(!u2){location.href="/login.html";return}
+    $("who").textContent=u2.name+" ";
+  } else $("who").textContent=u.name+" ";
+  load();
+}
+$("open").onclick=()=>panel(true);
+$("cancel").onclick=()=>{show("");panel(false)};
 $("add").addEventListener("submit",async e=>{e.preventDefault();show("");
   const b={title:$("title").value,genre:$("genre").value,status:$("status").value};
-  try{editId?await api("/api/list/"+editId,"PUT",b):await api("/api/list","POST",b);
-    editId=null;$("save").textContent="Add";e.target.reset();load()}catch(x){show(x.message)}});
+  try{editId?await api("/api/list/"+editId,"PUT",b):await api("/api/list","POST",b);panel(false);load()}catch(x){show(x.message)}});
 $("items").addEventListener("click",async e=>{
   const d=e.target.dataset.d,ed=e.target.dataset.e;
   if(d){try{await api("/api/list/"+d,"DELETE");load()}catch(x){show(x.message)}}
-  if(ed){const i=items.find(x=>x.id==ed);editId=i.id;$("title").value=i.title;$("genre").value=i.genre;$("status").value=i.status;$("save").textContent="Save changes";$("title").focus()}});
+  if(ed){panel(true,items.find(x=>x.id==ed));window.scrollTo({top:0,behavior:"smooth"})}});
 $("out").onclick=async()=>{await api("/api/logout","POST");location.href="/"};
 init();
 </script></body></html>

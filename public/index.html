@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Cinevo – Watch anywhere</title><link rel="stylesheet" href="/style.css"></head><body>
 <header class="hero">
-  <nav class="nav"><a class="logo" href="/">CINEVO</a><a class="btn" href="/login.html">Sign in</a></nav>
+  <nav class="nav"><a class="logo" href="/">CINEVO</a><a class="btn" id="navbtn" href="/login.html">Sign in</a></nav>
   <div class="hero-body">
     <h1>Unlimited movies, shows, and more</h1>
     <p>Starts at ₹149. Cancel anytime.</p>
@@ -19,7 +19,10 @@
   <details><summary>How do I cancel?</summary><p>Anytime, online, in two clicks. No cancellation fees.</p></details>
 </section>
 <footer>Student project. Not affiliated with any streaming service.</footer>
+<script src="/app.js"></script>
 <script>
+let loggedIn=false;
+getUser().then(u=>{if(u){loggedIn=true;const b=document.getElementById("navbtn");b.textContent="My List";b.href="/list.html"}});
 document.getElementById("start").addEventListener("submit",e=>{e.preventDefault();
 location.href="/signup.html?email="+encodeURIComponent(document.getElementById("email").value)});
 </script></body></html>

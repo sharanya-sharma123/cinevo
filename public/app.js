@@ -14,3 +14,6 @@ function authForm(formId, url, fields) {
     catch (x) { err.textContent = x.message; err.classList.add("show"); btn.disabled = false; }
   });
 }
+
+async function getUser() { try { return (await api("/api/me")).user; } catch { return null; } }
+async function redirectIfLoggedIn() { if (await getUser()) location.href = "/list.html"; }

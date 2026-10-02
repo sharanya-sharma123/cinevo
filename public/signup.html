@@ -10,6 +10,7 @@
 <button class="btn">Sign up</button></form>
 <p class="alt">Already have an account? <a href="/login.html">Sign in</a></p></main>
 <script src="/app.js"></script>
+<script>redirectIfLoggedIn();</script>
 <script>
 document.getElementById("email").value=new URLSearchParams(location.search).get("email")||"";
 authForm("f","/api/signup",["name","email","password"]);

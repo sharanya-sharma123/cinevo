@@ -45,3 +45,10 @@ input,select{width:100%;margin-top:.3rem;padding:.85rem;border-radius:4px;border
 .item button.del{background:var(--red)}
 .empty{color:var(--mute);text-align:center;padding:2rem}
 @media(max-width:700px){.add{grid-template-columns:1fr}.feature.rev{flex-direction:row}}
+
+.head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+.head h1{margin:0}
+.add{background:var(--card);padding:1rem;border-radius:6px;grid-template-columns:2fr 1fr 1fr auto auto}
+.add[hidden]{display:none}
+.hint{color:var(--mute);text-align:center;padding:2rem}
+@media(max-width:700px){.add{grid-template-columns:1fr}}
